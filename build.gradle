@@ -1,0 +1,77 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+ext {
+    fingBugsVersion = "3.0.2"
+//    lombokVersion = "1.18.20"
+//    springVersion = "5.3.10"
+    springBootVersion = "2.5.5"
+//    jacksonVersion = "2.9.8"
+    wsdl4jVersion = "1.6.3"
+    jaxbXjcVersion = "3.0.2"
+}
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    jaxb
+}
+
+dependencies {
+//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    compileOnly "com.google.code.findbugs:jsr305:$fingBugsVersion"
+//    compileOnly "org.projectlombok:lombok:$lombokVersion"
+//    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+//    implementation "org.springframework:spring-web:$springVersion"
+
+//    implementation "org.springframework.boot:spring-boot-starter-parent:$springBootVersion"
+//    implementation "org.springframework.boot:spring-boot-starter-ws:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-web-services:$springBootVersion"
+    implementation "wsdl4j:wsdl4j:$wsdl4jVersion"
+//    jaxb("com.sun.xml.bind:jaxb-xjc:2.2.4-1")
+//    compile(files(genJaxb.classesDir).builtBy(genJaxb))
+//    implementation "com.sun.xml.bind:jaxb-xjc:$jaxbXjcVersion"
+//    implementation 'jakarta.annotation:jakarta.annotation-api:2.0.0'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1'
+    implementation 'org.apache.cxf:cxf-core:3.4.5'
+    jaxb (
+            "com.sun.xml.bind:jaxb-core:$jaxbXjcVersion",
+            "com.sun.xml.bind:jaxb-xjc:$jaxbXjcVersion",
+            "com.sun.xml.bind:jaxb-impl:$jaxbXjcVersion"
+    )
+//    implementation 'org.apache.cxf:cxf-bundle:2.7.18'
+    implementation 'org.apache.cxf:cxf-tools-misctools:3.4.5'
+}
+
+task jaxb () {
+    def jaxbTargetDir = file("src/main/java")
+    doLast {
+        jaxbTargetDir.mkdirs()
+        ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+        ant.jaxbTargetDir = jaxbTargetDir
+        ant.xjc(
+                destdir: '${jaxbTargetDir}',
+                package: 'ru.mrs.ws.server.soap.simple.xsd.dev',
+                schema: 'src/main/resources/def/countries.xsd'
+        )
+    }
+}
+compileJava.dependsOn jaxb
+clean.doFirst {
+    def jaxbGeneratedDir = file("src/main/java/ru/mrs/ws/server/soap/simple/xsd/dev")
+    delete jaxbGeneratedDir.path
+}
+
+/*
+test {
+    useJUnitPlatform()
+}*/
